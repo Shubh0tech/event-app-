@@ -1,0 +1,6 @@
+{
+  "name": "Event OS",
+  "description": "A comprehensive full-stack event management and social networking platform with real-time updates and AI-powered recommendations.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}

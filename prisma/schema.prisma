@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  interests String?  // Stored as comma-separated or JSON string
+  bio       String?
+  age       Int?
+  avatarUrl String?
+  registrations Registration[]
+  messages      Message[]
+  comments      Comment[]
+  badges        Badge[]
+  ownedGroups   Group[]       @relation("GroupOwner")
+  followedGroups Follower[]
+  organizedEvents Event[]     @relation("EventOrganizer")
+  ratings       Rating[]
+  photos        Photo[]
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  icon        String
+  earnedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  owner       User     @relation("GroupOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  followers   Follower[]
+  createdAt   DateTime @default(now())
+}
+
+model Follower {
+  userId  String
+  groupId String
+  user    User   @relation(fields: [userId], references: [id])
+  group   Group  @relation(fields: [groupId], references: [id])
+  @@id([userId, groupId])
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String
+  swags       String? // Comma-separated or JSON list of swags
+  location    String? // e.g., "San Francisco, CA"
+  lat         Float?
+  lng         Float?
+  imageUrl    String? // Event cover image URL
+  price       Float    @default(0)
+  capacity    Int      @default(100)
+  date        DateTime @default(now())
+  organizer   User     @relation("EventOrganizer", fields: [organizerId], references: [id])
+  organizerId String
+  activities  Activity[]
+  categories  Category[]
+  registrations Registration[]
+  comments      Comment[]
+  ratings       Rating[]
+  photos        Photo[]
+}
+
+model Photo {
+  id        String   @id @default(uuid())
+  url       String
+  caption   String?
+  uploadedAt DateTime @default(now())
+  event     Event?   @relation(fields: [eventId], references: [id])
+  eventId   String?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  reply     String?  // Organizer reply
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+}
+
+model Activity {
+  id      String @id @default(uuid())
+  title   String
+  time    String?
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+}
+
+model Category {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  events Event[]
+}
+
+model Registration {
+  id      String @id @default(uuid())
+  status  String @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+  @@unique([userId, eventId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  sessionId String   // eventId or separate chat room
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  score     Int      // 1-5
+  feedback  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+  @@unique([userId, eventId])
+}
